@@ -9,6 +9,9 @@
     "graphql-yoga": "^1.18.3"
   },
   "scripts": {
-    "start": "babel-node src/index.js"
+    "start": "nodemon src/index.js --exec babel-node"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.3"
   }
 }
