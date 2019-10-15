@@ -25,19 +25,22 @@ const posts = [
         id: '1',
         title: 'Why I love the last question?',
         body: 'Lorem dolor sit amen',
-        publushed: true
+        publushed: true,
+        author: '1'
     },
     {
         id: '2',
         title: 'Why I dislike university?',
         body: 'Lorem dolor sit amen',
-        publushed: true
+        publushed: true,
+        author: '1'
     },
     {
         id: '3',
         title: 'Why you should learn CRSPR',
         body: 'Lorem dolor sit amen',
-        publushed: false
+        publushed: false,
+        author: '2'
     }
 ]
 
@@ -62,6 +65,7 @@ const typeDefs = `
         title: String!
         body: String!
         published: Boolean!
+        author: User!
     }
 `
 
@@ -91,6 +95,11 @@ const resolvers = {
             }
 
             return posts.filter((post) => post.title.toLowerCase().includes(args.query))
+        }
+    },
+    Post: {
+        author(parent, args, ctx, info) {
+            return users.find(user => user.id === parent.author) 
         }
     }
 }
