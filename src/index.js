@@ -1,13 +1,53 @@
 import { GraphQLServer } from 'graphql-yoga'
 
+// Demo user data
+const users = [
+    {
+        id: '1',
+        name: 'Andrew',
+        email: 'andrewmead@example.com',
+        age: 27
+    },
+    {
+        id: '2',
+        name: 'Sarah',
+        email: 'sarah@example.com',
+    },
+    {
+        id: '3',
+        name: 'Mike',
+        email: 'mike@example.com',
+    }
+]
+
+const posts = [
+    {
+        id: '1',
+        title: 'Why I love the last question?',
+        body: 'Lorem dolor sit amen',
+        publushed: true
+    },
+    {
+        id: '2',
+        title: 'Why I dislike university?',
+        body: 'Lorem dolor sit amen',
+        publushed: true
+    },
+    {
+        id: '3',
+        title: 'Why you should learn CRSPR',
+        body: 'Lorem dolor sit amen',
+        publushed: false
+    }
+]
+
+
 // Type definitions (schema)
 const typeDefs = `
     type Query {
-        greeting(name: String, position: String): String!
+        users(query: String): [User!]!
         me: User!
-        post: Post!
-        grades: [Int!]!
-        add(numbers: [Float]!): Float!
+        posts(query: String): [Post!]!
     }
 
     type User {
@@ -28,15 +68,14 @@ const typeDefs = `
 // Resolvers
 const resolvers = {
     Query: {
-        greeting(parent, args, ctx, info) {
-            if (args.name && args.position) {
-                return `Hello ${args.name} you are my favourite ${args.position}!`
-            } else {
-                return `Hello!`
+        users(parent, args, ctx, info) {
+            if (!args.query) {
+                return users
             }
-        },
-        grades(parent, args, ctx, info) {
-            return [99, 80, 93]
+
+            return users.filter((user) => {
+                return user.name.toLowerCase().includes(args.query.toLowerCase())
+            })
         },
         me() {
             return {
@@ -46,20 +85,12 @@ const resolvers = {
                 age: 28
             }
         },
-        post() {
-            return {
-                id: '123098',
-                title: 'How to get your driving license?',
-                body: 'Lorem dolor ipsum sit amen',
-                published: false
-            }
-        },
-        add(undefined, args) {
-            if (args.numbers.length === 0) {
-                return 0
+        posts(parent, args, ctx, info) {
+            if (!args.query) {
+                return posts
             }
 
-            return args.numbers.reduce((acumulator, current) => acumulator + current)
+            return posts.filter((post) => post.title.toLowerCase().includes(args.query))
         }
     }
 }
