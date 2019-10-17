@@ -2,7 +2,7 @@ import { GraphQLServer } from 'graphql-yoga'
 import uuidv4 from 'uuid/v4'
 
 // Demo user data
-const users = [
+let users = [
     {
         id: '1',
         name: 'Andrew',
@@ -26,21 +26,21 @@ let posts = [
         id: '1',
         title: 'Why I love the last question?',
         body: 'Lorem dolor sit amen',
-        publushed: true,
+        published: true,
         author: '1'
     },
     {
         id: '2',
         title: 'Why I dislike university?',
         body: 'Lorem dolor sit amen',
-        publushed: true,
+        published: true,
         author: '1'
     },
     {
         id: '3',
         title: 'Why you should learn CRSPR',
         body: 'Lorem dolor sit amen',
-        publushed: false,
+        published: false,
         author: '2'
     }
 ]
@@ -86,7 +86,9 @@ const typeDefs = `
         createUser(data: CreateUserInput): User!
         deleteUser(id: ID): User!
         createPost(data: CreatePostInput): Post!
+        deletePost(id: ID): Post!
         createComment(data: CreateCommentInput): Comment!
+        deleteComment(id: ID): Comment!
     }
 
     input CreateUserInput {
@@ -220,6 +222,19 @@ const resolvers = {
 
             return post
         },
+        deletePost(parent, args, content, info) {
+            const pos = posts.findIndex(post => post.id === args.id)
+
+            if (pos === -1) {
+                throw new Error('Post does not exist')
+            }
+
+            posts.splice(pos, 1)
+
+            comments = comments.filter(comment => comment.post !== args.id)
+
+            return posts[pos]
+        },
         createComment(parent, args, ctx, info) {
             const userExists = users.some(user => user.id === args.data.author)
             const postExists = posts.some(post => post.id === args.data.post)
@@ -240,7 +255,14 @@ const resolvers = {
             comments.push(comment)
 
             return comment
-        }
+        },
+        deleteComment(parent, args, content, info) {
+            const pos = comments.findIndex(comment => comment.id === args.id)
+
+            comments.splice(pos, 1)
+
+            return comments[pos]
+        },
     },
     Post: {
         author(parent, args, ctx, info) {
