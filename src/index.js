@@ -21,7 +21,7 @@ const users = [
     }
 ]
 
-const posts = [
+let posts = [
     {
         id: '1',
         title: 'Why I love the last question?',
@@ -45,7 +45,7 @@ const posts = [
     }
 ]
 
-const comments = [
+let comments = [
     {
         id: '1',
         text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -56,7 +56,7 @@ const comments = [
         id: '2',
         text: 'Curabitur et diam vitae dui egestas pharetra.',
         author: '1',
-        post: '2'
+        post: '3'
     },
     {
         id: '3',
@@ -68,7 +68,7 @@ const comments = [
         id: '4',
         text: 'Suspendisse magna lectus, dictum id fermentum id, vulputate ac dui.',
         author: '3',
-        post: '3'
+        post: '1'
     }
 ]
 
@@ -84,6 +84,7 @@ const typeDefs = `
 
     type Mutation {
         createUser(data: CreateUserInput): User!
+        deleteUser(id: ID): User!
         createPost(data: CreatePostInput): Post!
         createComment(data: CreateCommentInput): Comment!
     }
@@ -179,6 +180,29 @@ const resolvers = {
             users.push(user)
 
             return user
+        },
+        deleteUser(parent, args, ctx, info) {
+            const userIndex = users.findIndex(user => user.id === args.id)
+
+            if (userIndex === -1) {
+                throw new Error("User does not exist")
+            }
+
+            const deletedUsers = users.splice(userIndex, 1)
+
+            posts = posts.filter(post => {
+                const match = post.id === args.id
+
+                if (match) {
+                    comments = comments.filter(comment => comment.post !== post.id)
+                }
+
+                return !match
+            })
+
+            comments = comments.filter(comment => comment.autho !== args.id)
+
+            return deletedUsers[0]
         },
         createPost(parent, args, contect, info) {
             const userExists = users.some(user => user.id === args.data.author)
