@@ -21,6 +21,11 @@ const Subscription = {
 
             return pubsub.asyncIterator(`comment ${postId}`)
         }
+    },
+    post: {
+        subscribe(parent, args, { db, pubsub }, info) {
+            return pubsub.asyncIterator(`WATCH_POST_CREATION`)
+        }
     }
 }
 
