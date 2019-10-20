@@ -105,7 +105,7 @@ const Mutation = {
 
         db.comments = db.comments.filter(comment => comment.post !== args.id)
 
-        if(delpost.published ) {
+        if (delpost.published) {
             pubsub.publish('WATCH_POST', {
                 post: {
                     mutation: 'DELETED',
@@ -136,14 +136,14 @@ const Mutation = {
         if (typeof data.published === "boolean") {
             post.published = data.published
 
-            if(originalPost.published && !post.published) {
+            if (originalPost.published && !post.published) {
                 pubsub.publish('WATCH_POST', {
                     post: {
                         mutation: 'DELETED',
                         data: originalPost
                     }
                 })
-            } else if(!originalPost.published && post.published) {
+            } else if (!originalPost.published && post.published) {
                 pubsub.publish('WATCH_POST', {
                     post: {
                         mutation: 'CREATED',
@@ -151,7 +151,7 @@ const Mutation = {
                     }
                 })
             }
-        } else if(post.published) {
+        } else if (post.published) {
             pubsub.publish('WATCH_POST', {
                 post: {
                     mutation: 'UPDATED',
@@ -181,17 +181,29 @@ const Mutation = {
 
         db.comments.push(comment)
         pubsub.publish(`comment ${args.data.post}`, { comment })
+        pubsub.publish('WATCH_COMMENT', {
+            comment: {
+                mutation: "CREATE",
+                data: comment
+            }
+        })
 
         return comment
     },
-    deleteComment(parent, args, content, info) {
+    deleteComment(parent, args, { db, pubsub }, info) {
         const pos = db.comments.findIndex(comment => comment.id === args.id)
 
-        db.comments.splice(pos, 1)
+        const [delComment] = db.comments.splice(pos, 1)
+        pubsub.publish('WATCH_COMMENT', {
+            comment: {
+                mutation: "DELETED",
+                data: delComment
+            }
+        })
 
         return db.comments[pos]
     },
-    updateComment(parent, args, { db }, info) {
+    updateComment(parent, args, { db, pubsub }, info) {
         const { id, data } = args
         const comment = db.comments.find(comment => comment.id === args.id)
 
@@ -202,6 +214,13 @@ const Mutation = {
         if (typeof data.text === "string") {
             comment.text = data.text
         }
+
+        pubsub.publish('WATCH_COMMENT', {
+            comment: {
+                mutation: "UPDATED",
+                data: comment
+            }
+        })
 
         return comment
     }
