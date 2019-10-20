@@ -84,27 +84,42 @@ const Mutation = {
         db.posts.push(post)
 
         if (post.published === true) {
-            pubsub.publish('WATCH_POST_CREATION', { post })
+            pubsub.publish('WATCH_POST', {
+                post: {
+                    mutation: 'CREATED',
+                    data: post
+                }
+            })
         }
-        
+
         return post
     },
-    deletePost(parent, args, { db }, info) {
+    deletePost(parent, args, { db, pubsub }, info) {
         const pos = db.posts.findIndex(post => post.id === args.id)
 
         if (pos === -1) {
             throw new Error('Post does not exist')
         }
 
-        db.posts.splice(pos, 1)
+        const [delpost] = db.posts.splice(pos, 1)
 
         db.comments = db.comments.filter(comment => comment.post !== args.id)
 
-        return db.posts[pos]
+        if(delpost.published ) {
+            pubsub.publish('WATCH_POST', {
+                post: {
+                    mutation: 'DELETED',
+                    data: delpost
+                }
+            })
+        }
+
+        return delpost
     },
-    updatePost(parent, args, { db }, info) {
+    updatePost(parent, args, { db, pubsub }, info) {
         const { id, data } = args
         const post = db.posts.find(post => post.id === id)
+        const originalPost = { ...post }
 
         if (!post) {
             throw new Error('Post not found')
@@ -120,6 +135,29 @@ const Mutation = {
 
         if (typeof data.published === "boolean") {
             post.published = data.published
+
+            if(originalPost.published && !post.published) {
+                pubsub.publish('WATCH_POST', {
+                    post: {
+                        mutation: 'DELETED',
+                        data: originalPost
+                    }
+                })
+            } else if(!originalPost.published && post.published) {
+                pubsub.publish('WATCH_POST', {
+                    post: {
+                        mutation: 'CREATED',
+                        data: post
+                    }
+                })
+            }
+        } else if(post.published) {
+            pubsub.publish('WATCH_POST', {
+                post: {
+                    mutation: 'UPDATED',
+                    data: post
+                }
+            })
         }
 
         return post

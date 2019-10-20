@@ -24,7 +24,7 @@ const Subscription = {
     },
     post: {
         subscribe(parent, args, { db, pubsub }, info) {
-            return pubsub.asyncIterator(`WATCH_POST_CREATION`)
+            return pubsub.asyncIterator(`WATCH_POST`)
         }
     }
 }
